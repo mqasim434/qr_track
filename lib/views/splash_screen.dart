@@ -1,0 +1,68 @@
+// ignore_for_file: prefer_const_constructors
+
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:qr_track/models/user_model.dart';
+import 'package:qr_track/res/enums.dart';
+import 'package:qr_track/res/utility_functions.dart';
+import 'package:qr_track/services/session_management_services.dart';
+import 'package:qr_track/views/dashboard.dart';
+import 'package:qr_track/views/registration/signin_screen.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    Timer(Duration(seconds: 3), () {
+      SessionManagementService.checkSession().then((data) {
+        if (data['email'] != null && data['password'] != null) {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => Dashboard()));
+        } else {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => SigninScreen()));
+        }
+      });
+    });
+    super.initState();
+  }
+
+  Future<void> fetchLoggedInUserData(Map<String, dynamic> userData) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot =
+          await FirebaseFirestore.instance
+              .collection(
+                  UtilityFunctions.getCollectionName(userData['userType']))
+              .where('email', isEqualTo: userData['email'])
+              .limit(1)
+              .get();
+      if (userData['userType'] == UserRoles.Teacher.name) {
+        UserModel.currentUser =
+            TeacherModel.fromJson(querySnapshot.docs.first.data());
+      } else {
+        UserModel.currentUser =
+            StudentModel.fromJson(querySnapshot.docs.first.data());
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+        child: Scaffold(
+      body: Center(
+        child: Image.asset('assets/logo/app_logo.png'),
+      ),
+    ));
+  }
+}

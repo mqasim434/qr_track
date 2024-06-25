@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1059766292331",
+    "project_id": "qr-track-d7650",
+    "storage_bucket": "qr-track-d7650.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1059766292331:android:2f93582fe8142c0d38862e",
+        "android_client_info": {
+          "package_name": "com.example.qr_track"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAt_xf4dQfN8S7T97FpKrPYzm-aBPhDNcE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

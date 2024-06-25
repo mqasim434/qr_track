@@ -6,6 +6,10 @@ import 'package:qr_track/res/components/my_textfield.dart';
 import 'package:qr_track/res/components/role_widget.dart';
 import 'package:qr_track/res/components/rounded_rectangular_button.dart';
 import 'package:qr_track/res/enums.dart';
+import 'package:qr_track/services/registration_services.dart';
+import 'package:qr_track/services/session_management_services.dart';
+import 'package:qr_track/views/dashboard.dart';
+import 'package:qr_track/views/dashboard_screen.dart';
 import 'package:qr_track/views/registration/forgot_password_screen.dart';
 import 'package:qr_track/views/registration/signup_screen.dart';
 
@@ -20,6 +24,8 @@ class _SigninScreenState extends State<SigninScreen> {
   UserRoles selectedRole = UserRoles.Teacher;
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+
+  final formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +54,7 @@ class _SigninScreenState extends State<SigninScreen> {
           SingleChildScrollView(
             child: Container(
               width: screenWidth * 0.9,
-              height: screenHeight * 0.6,
+              height: screenHeight * 0.62,
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
@@ -61,105 +67,170 @@ class _SigninScreenState extends State<SigninScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Sign in',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 12,
-                    ),
-                    Text(
-                      'Continue using:',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        RoleWidget(
-                          role: UserRoles.Teacher.name,
-                          icon: Icons.person,
-                          isSelected: selectedRole == UserRoles.Teacher,
-                          onTap: () {
-                            setState(() {
-                              selectedRole = UserRoles.Teacher;
-                            });
-                          },
+                        Text(
+                          'Sign in',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        RoleWidget(
-                          role: UserRoles.Student.name,
-                          icon: Icons.person,
-                          isSelected: selectedRole == UserRoles.Student,
-                          onTap: () {
-                            setState(() {
-                              selectedRole = UserRoles.Student;
-                            });
-                          },
+                        SizedBox(
+                          height: 12,
                         ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    MyTextField(
-                      label: 'Email',
-                      controller: emailController,
-                    ),
-                    MyTextField(
-                      label: 'Password',
-                      controller: passwordController,
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    RoundedRectangularButton(
-                      label: 'Sign up',
-                      onPress: () {},
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text("Don't have an account?"),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SignupScreen(),
-                              ),
-                            );
-                          },
-                          child: Text('Sign up'),
+                        Text(
+                          'Continue using:',
+                          style: TextStyle(
+                            fontSize: 16,
+                          ),
                         ),
-                      ],
-                    ),
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ForgotPassword(),
+                        SizedBox(
+                          height: 8,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            RoleWidget(
+                              role: UserRoles.Teacher.name,
+                              icon: Icons.person,
+                              isSelected: selectedRole == UserRoles.Teacher,
+                              onTap: () {
+                                setState(() {
+                                  selectedRole = UserRoles.Teacher;
+                                });
+                              },
                             ),
-                          );
-                        },
-                        child: Text(
-                          'Forgot Password',
+                            RoleWidget(
+                              role: UserRoles.Student.name,
+                              icon: Icons.person,
+                              isSelected: selectedRole == UserRoles.Student,
+                              onTap: () {
+                                setState(() {
+                                  selectedRole = UserRoles.Student;
+                                });
+                              },
+                            ),
+                          ],
                         ),
-                      ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        MyTextField(
+                          label: 'Email',
+                          controller: emailController,
+                          validator: (value) {
+                            if (value.toString().isEmpty) {
+                              return "Email can't be empty.";
+                            } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                .hasMatch(value.toString())) {
+                              return "Email is not valid";
+                            } else {
+                              return null;
+                            }
+                          },
+                        ),
+                        MyTextField(
+                          label: 'Password',
+                          controller: passwordController,
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return "Password Can't be empty";
+                            } else if (value.length < 6) {
+                              return "Invalid Password Length";
+                            } else {
+                              return null;
+                            }
+                          },
+                        ),
+                        SizedBox(
+                          height: 8,
+                        ),
+                        RoundedRectangularButton(
+                          label: 'Sign in',
+                          onPress: () {
+                            if (formKey.currentState!.validate()) {
+                              RegistrationServices.signInWithEmailPassword(
+                                      email: emailController.text,
+                                      password: passwordController.text,
+                                      userRole: selectedRole)
+                                  .then((loggedin) {
+                                SessionManagementService.createSession(
+                                  email: emailController.text,
+                                  password: passwordController.text,
+                                  userRole: selectedRole,
+                                ).then((value) {
+                                  if (loggedin) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => Dashboard(),
+                                      ),
+                                    );
+                                  } else {
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            icon: Icon(Icons.error),
+                                            title: Text('Failed to login'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: Text('Ok'),
+                                              ),
+                                            ],
+                                          );
+                                        });
+                                  }
+                                });
+                              });
+                              setState(() {});
+                            }
+                          },
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text("Don't have an account?"),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SignupScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text('Sign up'),
+                            ),
+                          ],
+                        ),
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ForgotPassword(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'Forgot Password',
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

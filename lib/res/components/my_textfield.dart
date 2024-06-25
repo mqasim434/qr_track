@@ -9,12 +9,14 @@ class MyTextField extends StatelessWidget {
     required this.controller,
     this.isNumber = false,
     this.isPassword = false,
+    required this.validator,
   });
 
   final String? label;
   final bool isPassword;
   final bool isNumber;
   final TextEditingController controller;
+  final String? Function(String? value) validator;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,7 @@ class MyTextField extends StatelessWidget {
           suffixIcon: isPassword ? Icon(Icons.remove_red_eye) : null,
         ),
         obscureText: isPassword,
+        validator: validator,
       ),
     );
   }
