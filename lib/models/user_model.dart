@@ -4,13 +4,22 @@ class UserModel {
   String? fullName;
   String? email;
   String? profileImage;
+  String? phone;
+  String? userType;
 
-  UserModel({this.fullName, this.email, this.profileImage});
+  UserModel(
+      {this.fullName,
+      this.email,
+      this.profileImage,
+      this.phone,
+      this.userType});
 
   UserModel.fromJson(Map<String, dynamic> json) {
     fullName = json['fullName'];
     email = json['email'];
     profileImage = json['profileImage'];
+    phone = json['phone'];
+    userType = json['userType'];
   }
 
   Map<String, dynamic> toJson() {
@@ -18,13 +27,15 @@ class UserModel {
     data['fullName'] = fullName;
     data['email'] = email;
     data['profileImage'] = profileImage;
+    data['phone'] = phone;
+    data['userType'] = userType;
     return data;
   }
 
   static dynamic currentUser;
 }
 
-class StudentModel {
+class StudentModel extends UserModel {
   String? rollNo;
   String? department;
   String? section;
@@ -32,20 +43,32 @@ class StudentModel {
   String? program;
   List<CourseModel>? courses;
 
-  StudentModel(
-      {this.rollNo,
-      this.department,
-      this.section,
-      this.batch,
-      this.program,
-      this.courses});
+  StudentModel({
+    super.fullName,
+    super.email,
+    super.profileImage,
+    super.phone,
+    super.userType,
+    this.rollNo,
+    this.department,
+    this.section,
+    this.batch,
+    this.program,
+    this.courses,
+  });
 
   StudentModel.fromJson(Map<String, dynamic> json) {
+    fullName = json['fullName'];
+    email = json['email'];
+    profileImage = json['profileImage'];
+    phone = json['phone'];
+    userType = json['userType'];
     rollNo = json['rollNo'];
     department = json['department'];
     section = json['section'];
     batch = json['batch'];
     program = json['program'];
+
     if (json['courses'] != null) {
       courses = <CourseModel>[];
       json['courses'].forEach((v) {
@@ -56,6 +79,9 @@ class StudentModel {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
+    data['fullName'] = fullName;
+    data['email'] = email;
+    data['profileImage'] = profileImage;
     data['rollNo'] = rollNo;
     data['department'] = department;
     data['section'] = section;
@@ -65,31 +91,73 @@ class StudentModel {
       data['courses'] = courses!.map((v) => v.toJson()).toList();
     }
     return data;
+  }
+
+  void updateField(String field, dynamic value) {
+    switch (field) {
+      case 'fullName':
+        fullName = value;
+        break;
+      case 'email':
+        email = value;
+        break;
+      case 'profileImage':
+        profileImage = value;
+        break;
+      case 'phone':
+        phone = value;
+        break;
+      case 'userType':
+        userType = value;
+        break;
+      case 'rollNo':
+        rollNo = value;
+        break;
+      case 'department':
+        department = value;
+        break;
+      case 'section':
+        section = value;
+        break;
+      case 'batch':
+        batch = value;
+        break;
+      case 'program':
+        program = value;
+        break;
+      case 'courses':
+        if (value is List) {
+          courses = value.map((v) => CourseModel.fromJson(v)).toList();
+        }
+        break;
+      default:
+        throw ArgumentError('Unknown field: $field');
+    }
   }
 }
 
-class TeacherModel {
-  String? rollNo;
-  String? department;
-  String? section;
-  String? batch;
-  String? program;
+class TeacherModel extends UserModel {
+  String? teacherId;
   List<CourseModel>? courses;
 
-  TeacherModel(
-      {this.rollNo,
-      this.department,
-      this.section,
-      this.batch,
-      this.program,
-      this.courses});
+  TeacherModel({
+    super.fullName,
+    super.email,
+    super.profileImage,
+    super.phone,
+    super.userType,
+    this.teacherId,
+    this.courses,
+  });
 
   TeacherModel.fromJson(Map<String, dynamic> json) {
-    rollNo = json['rollNo'];
-    department = json['department'];
-    section = json['section'];
-    batch = json['batch'];
-    program = json['program'];
+    fullName = json['fullName'];
+    email = json['email'];
+    profileImage = json['profileImage'];
+    phone = json['phone'];
+    userType = json['userType'];
+    teacherId = json['teacherId'];
+
     if (json['courses'] != null) {
       courses = <CourseModel>[];
       json['courses'].forEach((v) {
@@ -100,14 +168,45 @@ class TeacherModel {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['rollNo'] = rollNo;
-    data['department'] = department;
-    data['section'] = section;
-    data['batch'] = batch;
-    data['program'] = program;
+    data['fullName'] = fullName;
+    data['email'] = email;
+    data['profileImage'] = profileImage;
+    data['phone'] = phone;
+    data['userType'] = userType;
+    data['teacherId'] = teacherId;
     if (courses != null) {
       data['courses'] = courses!.map((v) => v.toJson()).toList();
     }
     return data;
+  }
+
+  void updateField(String field, dynamic value) {
+    switch (field) {
+      case 'fullName':
+        fullName = value;
+        break;
+      case 'email':
+        email = value;
+        break;
+      case 'profileImage':
+        profileImage = value;
+        break;
+      case 'phone':
+        phone = value;
+        break;
+      case 'userType':
+        userType = value;
+        break;
+      case 'teacherId':
+        teacherId = value;
+        break;
+      case 'courses':
+        if (value is List) {
+          courses = value.map((v) => CourseModel.fromJson(v)).toList();
+        }
+        break;
+      default:
+        throw ArgumentError('Unknown field: $field');
+    }
   }
 }

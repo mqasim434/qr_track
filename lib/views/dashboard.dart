@@ -1,9 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
-import 'package:qr_track/res/enums.dart';
 import 'package:qr_track/views/more_screen.dart';
-import 'package:qr_track/views/courses_screen.dart';
+import 'package:qr_track/views/courses_screens/courses_screen.dart';
 import 'package:qr_track/views/dashboard_screen.dart';
 
 class Dashboard extends StatefulWidget {

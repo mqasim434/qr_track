@@ -1,9 +1,13 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, prefer_if_null_operators
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:qr_track/models/course_model.dart';
+import 'package:qr_track/models/user_model.dart';
 import 'package:qr_track/res/colors.dart';
 import 'package:qr_track/res/utility_functions.dart';
+import 'package:qr_track/res/enums.dart';
+import 'package:qr_track/views/courses_screens/course_details_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,6 +17,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  CourseModel? ongoingCourse;
+  List<CourseModel>? coursesWithLecturesToday;
+
   Future<void> scanQr() async {
     String qrResult = 'Scanned Data Will Appear here';
     try {
@@ -25,6 +32,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } on PlatformException {
       qrResult = 'Failed to scan QR';
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCourses();
+  }
+
+  Future<void> fetchCourses() async {
+    await CourseModel.fetchCourses();
+    setState(() {
+      ongoingCourse = CourseModel.getOngoingLecture(CourseModel.coursesList);
+      coursesWithLecturesToday = CourseModel.getCoursesWithLecturesToday();
+      print('Ongoing course: ${ongoingCourse?.courseTitle}');
+    });
   }
 
   @override
@@ -53,7 +75,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     'Welcome',
                   ),
                   subtitle: Text(
-                    'M. Qasim',
+                    UserModel.currentUser.fullName != null
+                        ? UserModel.currentUser.fullName
+                        : 'null',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   trailing: Icon(Icons.person_4, size: 60),
@@ -106,34 +130,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                InkWell(
-                  onTap: () {
-                    scanQr().then((value) {});
-                  },
-                  child: Card(
-                    color: AppColors.secondaryColor,
-                    child: ListTile(
-                      title: Text(
-                        'Programming Fundamentals',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
+                ongoingCourse != null
+                    ? InkWell(
+                        onTap:
+                            UserModel.currentUser.userType == UserRoles.Student
+                                ? () {
+                                    scanQr().then((value) {});
+                                  }
+                                : () {
+                                    Navigator.push(context,
+                                        MaterialPageRoute(builder: (context) {
+                                      return CourseDetails(
+                                          courseModel:
+                                              ongoingCourse as CourseModel);
+                                    }));
+                                  },
+                        child: Card(
+                          color: AppColors.secondaryColor,
+                          child: ListTile(
+                            title: Text(
+                              ongoingCourse!.courseTitle.toString(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${ongoingCourse!.program.toString()} ${ongoingCourse!.department.toString()} (Section: ${ongoingCourse!.batch.toString()} ${ongoingCourse!.section.toString()}) - (Room: ) ',
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                            trailing: Icon(
+                              UserModel.currentUser.userType ==
+                                      UserRoles.Student
+                                  ? Icons.qr_code
+                                  : Icons.punch_clock,
+                              size: 50,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
-                      subtitle: Text(
-                        'BS Software Engineering (Section; B)',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                      trailing: Icon(
-                        Icons.qr_code,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
+                      )
+                    : Text('No Ongoing Lecture'),
                 SizedBox(
                   height: 12,
                 ),
@@ -150,56 +189,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 SizedBox(
                   height: 4,
                 ),
-                Container(
-                  padding: EdgeInsets.all(4),
-                  width: screenWidth,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(
-                      20,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      LectureTile(
-                        courseTitle: "Programming Fundamentals",
-                        courseCode: "IT 110",
-                        lectureTime: "11:15 AM",
-                        classLabel: "BS SE 19 B",
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Divider(),
-                      ),
-                      LectureTile(
-                        courseTitle: "Programming Fundamentals",
-                        courseCode: "IT 110",
-                        lectureTime: "11:15 AM",
-                        classLabel: "BS SE 19 B",
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Divider(),
-                      ),
-                      LectureTile(
-                        courseTitle: "Programming Fundamentals",
-                        courseCode: "IT 110",
-                        lectureTime: "11:15 AM",
-                        classLabel: "BS SE 19 B",
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Divider(),
-                      ),
-                      LectureTile(
-                        courseTitle: "Programming Fundamentals",
-                        courseCode: "IT 110",
-                        lectureTime: "11:15 AM",
-                        classLabel: "BS SE 19 B",
-                      ),
-                    ],
-                  ),
-                ),
+                coursesWithLecturesToday != null
+                    ? Container(
+                        padding: EdgeInsets.all(4),
+                        width: screenWidth,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryColor,
+                          borderRadius: BorderRadius.circular(
+                            20,
+                          ),
+                        ),
+                        child: Column(
+                          children: coursesWithLecturesToday!.map((course) {
+                            return LectureTile(
+                              courseTitle: course.courseTitle ?? '',
+                              courseCode: course.courseCode ?? '',
+                              lectureTime:
+                                  '', // You should populate lectureTime based on your logic
+                              classLabel:
+                                  "${course.program ?? ''} ${course.department ?? ''} ${course.batch ?? ''} ${course.section ?? ''}",
+                            );
+                          }).toList(),
+                        ))
+                    : Text('No Lectures Today'),
               ],
             ),
           ),
@@ -228,14 +240,14 @@ class LectureTile extends StatelessWidget {
     return ListTile(
       isThreeLine: true,
       title: Text(
-        'Programming Fundamentals\nCourse Code: ${courseCode.toString()}',
+        '${courseTitle}\nCourse Code: ${courseCode.toString()}',
         style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w800,
         ),
       ),
       subtitle: Text(
-        'BS Software Engineering (Section; B)',
+        classLabel.toString(),
         style: TextStyle(
           color: Colors.white,
         ),

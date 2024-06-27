@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_track/models/user_model.dart';
+import 'package:qr_track/res/colors.dart';
 import 'package:qr_track/res/enums.dart';
 import 'package:qr_track/res/utility_functions.dart';
 import 'package:qr_track/services/session_management_services.dart';
@@ -24,8 +25,12 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(Duration(seconds: 3), () {
       SessionManagementService.checkSession().then((data) {
         if (data['email'] != null && data['password'] != null) {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => Dashboard()));
+          fetchLoggedInUserData(
+                  {'email': data['email'], 'password': data['password']})
+              .then((value) {
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => Dashboard()));
+          });
         } else {
           Navigator.push(
               context, MaterialPageRoute(builder: (context) => SigninScreen()));
@@ -61,7 +66,19 @@ class _SplashScreenState extends State<SplashScreen> {
     return SafeArea(
         child: Scaffold(
       body: Center(
-        child: Image.asset('assets/logo/app_logo.png'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('assets/logo/app_logo.png'),
+            Text(
+              'QR TRACK',
+              style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryColor),
+            ),
+          ],
+        ),
       ),
     ));
   }

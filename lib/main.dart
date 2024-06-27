@@ -3,18 +3,21 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:provider/provider.dart';
+import 'package:qr_track/services/theme_service.dart';
 import 'package:qr_track/views/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-      options: FirebaseOptions(
-    apiKey: 'AIzaSyAt_xf4dQfN8S7T97FpKrPYzm-aBPhDNcE',
-    appId: '1:1059766292331:android:2f93582fe8142c0d38862e',
-    messagingSenderId: '1059766292331',
-    projectId: 'qr-track-d7650',
-  ));
-  runApp(const MyApp());
+    options: FirebaseOptions(
+      apiKey: 'AIzaSyAt_xf4dQfN8S7T97FpKrPYzm-aBPhDNcE',
+      appId: '1:1059766292331:android:2f93582fe8142c0d38862e',
+      messagingSenderId: '1059766292331',
+      projectId: 'qr-track-d7650',
+    ),
+  );
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -22,14 +25,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Qr Track',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return ChangeNotifierProvider(
+      create: (_) => ThemeService.instance,
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, child) {
+          return MaterialApp(
+            title: 'Qr Track',
+            theme: themeService.currentThemeMode == 'Light Theme'
+                ? ThemeData.light()
+                : ThemeData.dark(),
+            builder: EasyLoading.init(),
+            debugShowCheckedModeBanner: false,
+            home: SplashScreen(),
+          );
+        },
       ),
-      builder: EasyLoading.init(),
-      home: SplashScreen(),
     );
   }
 }

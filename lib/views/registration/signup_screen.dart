@@ -213,6 +213,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                       email: emailController.text,
                                       password: passwordController.text,
                                       fullName: nameController.text,
+                                      rollNo: rollNoController.text,
+                                      teacherId: teacherIdController.text,
                                       userRole: selectedRole)
                                   .then((value) {
                                 if (value) {
