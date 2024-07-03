@@ -24,9 +24,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   Future<void> fetchCourses() async {
     try {
-      await CourseModel.fetchCourses();
-      print('Courses fetched: ${CourseModel.coursesList.length}');
-      setState(() {});
+      if (UserModel.currentUser.userType == UserRoles.Teacher.name) {
+        await CourseModel.fetchTeacherCourses();
+        setState(() {});
+      } else if (UserModel.currentUser.userType == UserRoles.Student.name) {
+        await CourseModel.fetchStudentCourses();
+        setState(() {});
+      }
     } catch (e) {
       print('Error fetching courses: $e');
     }
@@ -49,46 +53,50 @@ class _CoursesScreenState extends State<CoursesScreen> {
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: ListView.builder(
-            itemCount: CourseModel.coursesList.length,
-            itemBuilder: (context, index) {
-              CourseModel courseModel = CourseModel.coursesList[index];
-              return InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CourseDetails(
-                        courseModel: courseModel,
+          child: CourseModel.coursesList.isEmpty
+              ? Center(
+                  child: Text('No Courses Found'),
+                )
+              : ListView.builder(
+                  itemCount: CourseModel.coursesList.length,
+                  itemBuilder: (context, index) {
+                    CourseModel courseModel = CourseModel.coursesList[index];
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CourseDetails(
+                              courseModel: courseModel,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        color: AppColors.primaryColor,
+                        child: ListTile(
+                          title: Text(
+                            '${courseModel.courseTitle.toString()}\nCourse Code:${courseModel.courseCode.toString()}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${courseModel.program.toString()} ${courseModel.department.toString()} ${courseModel.batch.toString()} ${courseModel.section.toString()}',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
-                  );
-                },
-                child: Card(
-                  color: AppColors.primaryColor,
-                  child: ListTile(
-                    title: Text(
-                      '${courseModel.courseTitle.toString()}\nCourse Code:${courseModel.courseCode.toString()}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '${courseModel.program.toString()} ${courseModel.department.toString()} ${courseModel.batch.toString()} ${courseModel.section.toString()}',
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.white,
-                    ),
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
         floatingActionButton:
             UserModel.currentUser.userType == UserRoles.Teacher.name

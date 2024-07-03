@@ -16,7 +16,6 @@ class _DashboardState extends State<Dashboard> {
     CoursesScreen(),
     MoreScreen(),
   ];
-
   int currentIndex = 0;
   PageController pageController = PageController();
 

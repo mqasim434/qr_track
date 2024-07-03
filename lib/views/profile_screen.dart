@@ -1,13 +1,19 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:qr_track/models/user_model.dart';
 import 'package:qr_track/res/colors.dart';
 import 'package:qr_track/res/enums.dart';
 import 'package:qr_track/res/utility_functions.dart';
+import 'package:qr_track/services/theme_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -77,6 +83,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> uploadImageToFirebase(File imageFile) async {
+    FirebaseStorage firebaseStorage = FirebaseStorage.instance;
+    print(imageFile.path.split('/').last);
+    try {
+      final uploadTask = firebaseStorage
+          .ref()
+          .child('images/${imageFile.path.split('/').last}')
+          .putFile(imageFile);
+
+      final taskSnapshot = await uploadTask.whenComplete(() => {});
+
+      final downloadURL = await taskSnapshot.ref.getDownloadURL();
+      await updateUserField('imageUrl', downloadURL);
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> pickImage(ImageSource imageSource) async {
+    ImagePicker imagePicker = ImagePicker();
+    XFile? pickedImage = await imagePicker.pickImage(source: imageSource);
+    if (pickedImage != null) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Image Preview'),
+            content: SizedBox(
+              height: 300,
+              child: Image.file(
+                File(pickedImage.path),
+              ),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  uploadImageToFirebase(File(pickedImage.path));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  minimumSize: Size(
+                    double.maxFinite,
+                    50,
+                  ),
+                ),
+                child: Text(
+                  'Select',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -125,12 +192,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 10.0, right: 10),
-                        child: CircleAvatar(
-                            backgroundColor: AppColors.primaryColor,
-                            child: Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                            )),
+                        child: InkWell(
+                          onTap: () async {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('Choose an option'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    InkWell(
+                                      onTap: () =>
+                                          pickImage(ImageSource.camera),
+                                      child: ListTile(
+                                        leading: Icon(
+                                          Icons.camera,
+                                        ),
+                                        title: Text('Camera'),
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () =>
+                                          pickImage(ImageSource.gallery),
+                                      child: ListTile(
+                                        leading: Icon(
+                                          Icons.browse_gallery,
+                                        ),
+                                        title: Text('Gallery'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                              backgroundColor: AppColors.primaryColor,
+                              child: Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                              )),
+                        ),
                       ),
                     ],
                   ),
@@ -159,7 +261,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               margin: EdgeInsets.all(16),
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Provider.of<ThemeService>(context).currentThemeMode ==
+                          'Light Theme'
+                      ? Colors.white
+                      : AppColors.primaryColor,
                   borderRadius: BorderRadius.circular(
                     20,
                   ),

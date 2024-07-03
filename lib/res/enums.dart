@@ -5,3 +5,8 @@ enum UserRoles {
   Teacher,
 }
 
+enum AttendanceStatuses{
+  Present,
+  Absent,
+  Late,
+}

@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_track/models/course_model.dart';
+import 'package:qr_track/res/enums.dart';
+import 'package:qr_track/res/utility_functions.dart';
 
 class UserModel {
   String? fullName;
@@ -33,6 +36,23 @@ class UserModel {
   }
 
   static dynamic currentUser;
+
+  static Future<void> getUserData(String userRole, String email) async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore
+        .instance
+        .collection(UtilityFunctions.getCollectionName(userRole))
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (userRole == UserRoles.Student.name) {
+      UserModel.currentUser =
+          StudentModel.fromJson(querySnapshot.docs.first.data());
+    } else {
+      UserModel.currentUser =
+          TeacherModel.fromJson(querySnapshot.docs.first.data());
+    }
+  }
 }
 
 class StudentModel extends UserModel {

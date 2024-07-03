@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:io';
+import 'dart:math';
 
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
@@ -243,7 +244,15 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
+                                    String lectId = 'lect-';
+                                    Random random = Random();
+                                    int min = 1000;
+                                    int max = 9999;
+                                    int id =
+                                        min + random.nextInt(max - min + 1);
+                                    lectId = lectId + id.toString();
                                     lecturesList.add({
+                                      'lectureId': lectId,
                                       'startTime': startTimeController.text,
                                       'endTime': endTimeController.text,
                                       'roomLabel': roomLabelController.text,

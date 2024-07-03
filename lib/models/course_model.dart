@@ -16,7 +16,7 @@ class CourseModel {
   String? batch;
   String? program;
   List<StudentModel>? students;
-  List<Map<String, dynamic>>? lectures; // Added lectures field
+  List<Map<String, dynamic>>? lectures;
 
   static List<CourseModel> coursesList = [];
 
@@ -32,7 +32,7 @@ class CourseModel {
       this.batch,
       this.program,
       this.students,
-      this.lectures}); // Updated constructor
+      this.lectures});
 
   CourseModel.fromJson(Map<String, dynamic> json) {
     courseId = json['courseId'];
@@ -80,8 +80,6 @@ class CourseModel {
     return data;
   }
 
-  //functions
-
   static Future<bool> addCourseToFirestore(
     String courseTitle,
     String courseCode,
@@ -96,7 +94,6 @@ class CourseModel {
     List<Map<String, dynamic>> lectures,
   ) async {
     String courseId = generateRandomCourseId();
-    // Create a CourseModel instance using dummy data
     CourseModel newCourse = CourseModel(
       courseId: courseId,
       courseTitle: courseTitle,
@@ -108,17 +105,15 @@ class CourseModel {
       section: section,
       batch: batch,
       program: program,
-      students: students, // Add student data if necessary
-      lectures: lectures, // Add lecture data if necessary
+      students: students,
+      lectures: lectures,
     );
 
-    // Convert the CourseModel instance to JSON
     Map<String, dynamic> courseData = newCourse.toJson();
 
-    // Add the course to the Firestore collection
     await FirebaseFirestore.instance
         .collection('courses')
-        .doc(courseId) // Use courseId as document ID
+        .doc(courseId)
         .set(courseData)
         .then((_) {
       print("Course added successfully!");
@@ -129,7 +124,7 @@ class CourseModel {
     return true;
   }
 
-  static Future<void> fetchCourses() async {
+  static Future<void> fetchTeacherCourses() async {
     try {
       EasyLoading.show(status: 'Loading');
       QuerySnapshot<Map<String, dynamic>> querySnapshot =
@@ -140,7 +135,7 @@ class CourseModel {
                 isEqualTo: UserModel.currentUser.email,
               )
               .get();
-      coursesList.clear(); // Clear the list before adding new data
+      coursesList.clear();
       querySnapshot.docs.forEach((doc) {
         coursesList.add(CourseModel.fromJson(doc.data()));
       });
@@ -152,87 +147,134 @@ class CourseModel {
     }
   }
 
-  bool isLectureOngoing(Map<String, dynamic> lecture) {
-    DateTime now = DateTime.now();
-    DateFormat format = DateFormat("HH:mm"); // Assuming time is in HH:mm format
-
-    DateTime startTime = format.parse(lecture['startTime']);
-    DateTime endTime = format.parse(lecture['endTime']);
-
-    // Adjust today's date to the time from lecture start and end times
-    DateTime todayStartTime = DateTime(
-        now.year, now.month, now.day, startTime.hour, startTime.minute);
-    DateTime todayEndTime =
-        DateTime(now.year, now.month, now.day, endTime.hour, endTime.minute);
-
-    // Check if the current day matches the lecture day
-    String todayDay = DateFormat('EEEE')
-        .format(now); // Get current day as a string (e.g., "Monday")
-    String lectureDay = lecture[
-        'day']; // Assuming lecture contains a 'day' key with values like "Monday", "Tuesday", etc.
-
-    return now.isAfter(todayStartTime) &&
-        now.isBefore(todayEndTime) &&
-        todayDay == lectureDay;
+  static Future<void> fetchStudentCourses() async {
+    try {
+      EasyLoading.show(status: 'Loading');
+      QuerySnapshot<Map<String, dynamic>> querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('courses')
+              .where(
+                'department',
+                isEqualTo: UserModel.currentUser.department,
+              )
+              .get();
+      coursesList.clear();
+      querySnapshot.docs.forEach((doc) {
+        for (int i = 0; i < doc.data()['students'].length; i++) {
+          if (doc.data()['students'][i]['rollNo'] ==
+              UserModel.currentUser.rollNo) {
+            coursesList.add(CourseModel.fromJson(doc.data()));
+          }
+        }
+      });
+      print('Courses fetched successfully: ${coursesList.length} courses');
+    } catch (e) {
+      print('Error fetching courses: $e');
+    } finally {
+      EasyLoading.dismiss();
+    }
   }
 
-  static CourseModel? getOngoingLecture(List<CourseModel> courses) {
-    for (CourseModel course in courses) {
-      if (course.lectures != null) {
-        for (Map<String, dynamic> lecture in course.lectures!) {
-          if (course.isLectureOngoing(lecture)) {
-            return course;
+
+static Future<List<Map<String, dynamic>>> getCoursesWithLecturesToday() async {
+  List<Map<String, dynamic>> coursesWithLectureIds = [];
+
+  // Determine today's day of the week (e.g., Monday)
+  String todayDayName = DateFormat('EEEE').format(DateTime.now());
+
+  // Iterate through the courses list
+  for (CourseModel course in CourseModel.coursesList) {
+    if (course.lectures != null) {
+      // Iterate through the lectures of each course
+      for (Map<String, dynamic> lecture in course.lectures!) {
+        String lectureDay = lecture['day']; // Assuming 'day' field in lecture map
+
+        // Compare if the lecture is scheduled for today
+        if (lectureDay.toLowerCase() == todayDayName.toLowerCase()) {
+          // Prepare course data as JSON
+          Map<String, dynamic> courseJson = course.toJson();
+
+          // Create a map for the course and lecture ID
+          Map<String, dynamic> courseWithLectureId = {
+            'course': courseJson,
+            'lecture': lecture, // Assuming 'lectureId' field in lecture map
+          };
+
+          // Add to the list
+          coursesWithLectureIds.add(courseWithLectureId);
+        }
+      }
+    }
+  }
+
+  // Return the list of courses with lectures today
+  return coursesWithLectureIds;
+}
+
+
+ static Future<Map<String, dynamic>> getCurrentOngoingCourseWithLecture() async {
+  Map<String, dynamic> ongoingCourseWithLecture = {};
+
+  // Get current day of the week (e.g., Monday)
+  String todayDayName = DateFormat('EEEE').format(DateTime.now());
+
+  // Get current time in HH:mm format
+  String currentTime = DateFormat('HH:mm').format(DateTime.now());
+
+  // Iterate through the courses list
+  for (CourseModel course in CourseModel.coursesList) {
+    if (course.lectures != null) {
+      // Iterate through the lectures of each course
+      for (Map<String, dynamic> lecture in course.lectures!) {
+        String lectureDay = lecture['day']; // Assuming 'day' field in lecture map
+        String lectureStartTime = lecture['startTime']; // Assuming 'startTime' field in lecture map
+        String lectureEndTime = lecture['endTime']; // Assuming 'endTime' field in lecture map
+
+        // Compare if the lecture is scheduled for today and ongoing
+        if (lectureDay.toLowerCase() == todayDayName.toLowerCase()) {
+          if (isTimeBetween(currentTime, lectureStartTime, lectureEndTime)) {
+            // Prepare course data as JSON
+            Map<String, dynamic> courseJson = course.toJson();
+
+            // Create a map for the course and lecture
+            ongoingCourseWithLecture = {
+              'course': courseJson,
+              'lecture': lecture,
+            };
+
+            // Return immediately after finding the ongoing lecture
+            return ongoingCourseWithLecture;
           }
         }
       }
     }
-    return null; // No ongoing lecture found
   }
 
-  List<Map<String, dynamic>>? todaylectures; // Added lectures field
+  // Return an empty map if no ongoing lecture is found
+  return {};
+}
 
-  // Define this method inside the CourseModel class
-  bool hasLecturesToday() {
-    DateTime now = DateTime.now();
-    DateFormat format = DateFormat("HH:mm"); // Assuming time is in HH:mm format
+// Function to check if current time is between start and end times
+static bool isTimeBetween(String currentTime, String startTime, String endTime) {
+  DateTime current = DateFormat('HH:mm').parse(currentTime);
+  DateTime start = DateFormat('HH:mm').parse(startTime);
+  DateTime end = DateFormat('HH:mm').parse(endTime);
 
-    String todayDay = DateFormat('EEEE').format(now); // Get current day as a string (e.g., "Monday")
-
-    if (lectures != null) {
-      for (Map<String, dynamic> lecture in lectures!) {
-        if (lecture['day'] == todayDay) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  static List<CourseModel> getCoursesWithLecturesToday() {
-    List<CourseModel> coursesWithLecturesToday = [];
-
-    for (CourseModel course in coursesList) {
-      if (course.hasLecturesToday()) {
-        coursesWithLecturesToday.add(course);
-      }
-    }
-
-    return coursesWithLecturesToday;
-  }
-
+  return current.isAfter(start) && current.isBefore(end);
 }
 
 
-
+  
+}
 
 String generateRandomCourseId() {
-  String courseId = 'course-';
-  Random random = Random();
-  int min = 1000;
-  int max = 9999;
-  int id = min + random.nextInt(max - min + 1);
+    String courseId = 'course-';
+    Random random = Random();
+    int min = 1000;
+    int max = 9999;
+    int id = min + random.nextInt(max - min + 1);
 
-  courseId = courseId + id.toString();
+    courseId = courseId + id.toString();
 
-  return courseId;
-}
+    return courseId;
+  }

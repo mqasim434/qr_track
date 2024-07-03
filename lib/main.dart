@@ -11,11 +11,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: FirebaseOptions(
-      apiKey: 'AIzaSyAt_xf4dQfN8S7T97FpKrPYzm-aBPhDNcE',
-      appId: '1:1059766292331:android:2f93582fe8142c0d38862e',
-      messagingSenderId: '1059766292331',
-      projectId: 'qr-track-d7650',
-    ),
+        apiKey: 'AIzaSyAt_xf4dQfN8S7T97FpKrPYzm-aBPhDNcE',
+        appId: '1:1059766292331:android:2f93582fe8142c0d38862e',
+        messagingSenderId: '1059766292331',
+        projectId: 'qr-track-d7650',
+        storageBucket:
+            'https://console.firebase.google.com/project/qr-track-d7650/storage/qr-track-d7650.appspot.com/files'),
   );
   runApp(MyApp());
 }

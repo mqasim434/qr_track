@@ -1,4 +1,5 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, prefer_if_null_operators
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
@@ -17,20 +18,20 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  CourseModel? ongoingCourse;
-  List<CourseModel>? coursesWithLecturesToday;
+  Map<String, dynamic>? ongoingCourse;
+  List<Map<String, dynamic>>? coursesWithLecturesToday;
+  String? currentQrId;
 
-  Future<void> scanQr() async {
+  Future<String> scanQr(String currentQrCodeID) async {
     String qrResult = 'Scanned Data Will Appear here';
     try {
-      final qrCode = await FlutterBarcodeScanner.scanBarcode(
-        '#ff6666',
-        'Cancel',
-        true,
-        ScanMode.QR,
-      );
+      qrResult = await FlutterBarcodeScanner.scanBarcode(
+          '#ff6666', 'Cancel', true, ScanMode.QR);
+      setState(() {});
+      return qrResult;
     } on PlatformException {
       qrResult = 'Failed to scan QR';
+      return 'Failed to scan QR';
     }
   }
 
@@ -41,12 +42,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchCourses() async {
-    await CourseModel.fetchCourses();
-    setState(() {
-      ongoingCourse = CourseModel.getOngoingLecture(CourseModel.coursesList);
-      coursesWithLecturesToday = CourseModel.getCoursesWithLecturesToday();
-      print('Ongoing course: ${ongoingCourse?.courseTitle}');
-    });
+    if (UserModel.currentUser.userType == UserRoles.Teacher.name) {
+      await CourseModel.fetchTeacherCourses();
+    } else if (UserModel.currentUser.userType == UserRoles.Student.name) {
+      await CourseModel.fetchStudentCourses();
+    }
+    coursesWithLecturesToday = await CourseModel.getCoursesWithLecturesToday();
+    ongoingCourse = await CourseModel.getCurrentOngoingCourseWithLecture();
+    setState(() {});
   }
 
   @override
@@ -75,9 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     'Welcome',
                   ),
                   subtitle: Text(
-                    UserModel.currentUser.fullName != null
-                        ? UserModel.currentUser.fullName
-                        : 'null',
+                    UserModel.currentUser.fullName ?? 'null',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   trailing: Icon(Icons.person_4, size: 60),
@@ -130,56 +131,112 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                ongoingCourse != null
-                    ? InkWell(
-                        onTap:
-                            UserModel.currentUser.userType == UserRoles.Student
-                                ? () {
-                                    scanQr().then((value) {});
-                                  }
-                                : () {
-                                    Navigator.push(context,
-                                        MaterialPageRoute(builder: (context) {
-                                      return CourseDetails(
-                                          courseModel:
-                                              ongoingCourse as CourseModel);
-                                    }));
-                                  },
-                        child: Card(
-                          color: AppColors.secondaryColor,
-                          child: ListTile(
-                            title: Text(
-                              ongoingCourse!.courseTitle.toString(),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
+                (ongoingCourse != null && ongoingCourse!['course'] != null)
+                    ? StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('qrCode')
+                            .doc('latestQrCode')
+                            .snapshots(),
+                        builder: ((context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Center(
+                              child: Text('Error: ${snapshot.error}'),
+                            );
+                          } else if (!snapshot.hasData ||
+                              snapshot.data == null) {
+                            return Center(
+                              child: Text('No QR code data available'),
+                            );
+                          } else {
+                            var qrCodeData = snapshot.data!.data();
+                            if (qrCodeData == null) {
+                              return Center(
+                                child: Text('QR code data is null'),
+                              );
+                            }
+                            return InkWell(
+                              onTap: UserModel.currentUser.userType ==
+                                      UserRoles.Student.name
+                                  ? () {
+                                      scanQr(qrCodeData['qrCodeId'])
+                                          .then((value) {
+                                        if (value == 'Failed to scan QR') {
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return AlertDialog(
+                                                  title: Text('Scan Failed'),
+                                                  content: Text(
+                                                      'Failed to scan QR Code'),
+                                                );
+                                              });
+                                        } else {
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return AlertDialog(
+                                                  title: Text(
+                                                      '${qrCodeData['qrCodeId']} ${UserModel.currentUser.department} ${UserModel.currentUser.department} ${UserModel.currentUser.section} ${UserModel.currentUser.batch} ${UserModel.currentUser.program}'),
+                                                  content: Text(value),
+                                                );
+                                              });
+                                        }
+                                      });
+                                    }
+                                  : () {
+                                      Navigator.push(context,
+                                          MaterialPageRoute(builder: (context) {
+                                        return CourseDetails(
+                                            courseModel: CourseModel.fromJson(
+                                                ongoingCourse!['course']));
+                                      }));
+                                    },
+                              child: Card(
+                                color: AppColors.secondaryColor,
+                                child: ListTile(
+                                  title: Text(
+                                    ongoingCourse!['course']['courseTitle'] ??
+                                        '',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    '${ongoingCourse!['course']['program'] ?? ''} ${ongoingCourse!['course']['department'] ?? ''} (Section: ${ongoingCourse!['course']['batch'] ?? ''} ${ongoingCourse!['course']['section'] ?? ''}) - (Room: ${ongoingCourse!['lecture']['roomLabel'] ?? ''}) ',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  trailing: Icon(
+                                    UserModel.currentUser.userType ==
+                                            UserRoles.Student.name
+                                        ? Icons.qr_code
+                                        : Icons.punch_clock,
+                                    size: 50,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
-                            ),
-                            subtitle: Text(
-                              '${ongoingCourse!.program.toString()} ${ongoingCourse!.department.toString()} (Section: ${ongoingCourse!.batch.toString()} ${ongoingCourse!.section.toString()}) - (Room: ) ',
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            ),
-                            trailing: Icon(
-                              UserModel.currentUser.userType ==
-                                      UserRoles.Student
-                                  ? Icons.qr_code
-                                  : Icons.punch_clock,
-                              size: 50,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Text('No Ongoing Lecture'),
+                            );
+                          }
+                        }))
+                    : Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Text('No Ongoing Lecture'),
+                      ),
                 SizedBox(
                   height: 12,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 16.0),
                   child: Text(
-                    "Today's Shedule",
+                    "Today's Schedule",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -189,7 +246,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 SizedBox(
                   height: 4,
                 ),
-                coursesWithLecturesToday != null
+                (coursesWithLecturesToday != null &&
+                        coursesWithLecturesToday!.isNotEmpty)
                     ? Container(
                         padding: EdgeInsets.all(4),
                         width: screenWidth,
@@ -202,16 +260,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Column(
                           children: coursesWithLecturesToday!.map((course) {
                             return LectureTile(
-                              courseTitle: course.courseTitle ?? '',
-                              courseCode: course.courseCode ?? '',
+                              courseTitle:
+                                  course['course']['courseTitle'] ?? '',
+                              courseCode: course['course']['courseCode'] ?? '',
                               lectureTime:
-                                  '', // You should populate lectureTime based on your logic
+                                  "${course['lecture']['startTime'] ?? ''}-${course['lecture']['endTime'] ?? ''} ", // You should populate lectureTime based on your logic
                               classLabel:
-                                  "${course.program ?? ''} ${course.department ?? ''} ${course.batch ?? ''} ${course.section ?? ''}",
+                                  "${course['course']['program'] ?? ''} ${course['course']['department'] ?? ''} ${course['course']['batch'] ?? ''} ${course['course']['section'] ?? ''}",
                             );
                           }).toList(),
                         ))
-                    : Text('No Lectures Today'),
+                    : Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Text('No Lectures Today'),
+                      ),
               ],
             ),
           ),
@@ -240,20 +302,20 @@ class LectureTile extends StatelessWidget {
     return ListTile(
       isThreeLine: true,
       title: Text(
-        '${courseTitle}\nCourse Code: ${courseCode.toString()}',
+        '${courseTitle}\nCourse Code: ${courseCode ?? ''}',
         style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w800,
         ),
       ),
       subtitle: Text(
-        classLabel.toString(),
+        classLabel ?? '',
         style: TextStyle(
           color: Colors.white,
         ),
       ),
       trailing: Text(
-        '9:45 AM',
+        lectureTime ?? '',
         style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,

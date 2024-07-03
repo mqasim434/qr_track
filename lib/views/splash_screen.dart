@@ -28,11 +28,14 @@ class _SplashScreenState extends State<SplashScreen> {
           fetchLoggedInUserData(
                   {'email': data['email'], 'password': data['password']})
               .then((value) {
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => Dashboard()));
+            UserModel.getUserData(data['userType'], data['email'])
+                .then((value) {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => Dashboard()));
+            });
           });
         } else {
-          Navigator.push(
+          Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => SigninScreen()));
         }
       });
