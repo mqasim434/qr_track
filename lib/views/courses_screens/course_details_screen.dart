@@ -10,6 +10,7 @@ import 'package:qr_track/models/course_model.dart';
 import 'package:qr_track/models/user_model.dart';
 import 'package:qr_track/res/colors.dart';
 import 'package:qr_track/res/enums.dart';
+import 'package:qr_track/views/courses_screens/attendance_list_screen.dart';
 import 'package:qr_track/views/courses_screens/studets_list.dart';
 
 class CourseDetails extends StatefulWidget {
@@ -234,7 +235,19 @@ class _CourseDetailsState extends State<CourseDetails> {
                                 children: [
                                   Text('Attendance: '),
                                   InkWell(
-                                    onTap: () {},
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              AttendanceListScreen(
+                                            courseModel: widget.courseModel,
+                                            lectureId:
+                                                e['lectureId'].toString(),
+                                          ),
+                                        ),
+                                      );
+                                    },
                                     child: Text(
                                       'View',
                                       style: TextStyle(
@@ -265,8 +278,9 @@ class _CourseDetailsState extends State<CourseDetails> {
                                       width: screenWidth,
                                       height: screenHeight * 0.4,
                                       child: QrImageView(
-                                        data:
-                                            '$qrId ${e['lectureId']}  ${widget.courseModel.courseCode} ${widget.courseModel.department} ${widget.courseModel.section} ${widget.courseModel.batch} ${widget.courseModel.program}',
+                                        data: qrId.toString(),
+                                        // data:
+                                        //     '$qrId ${e['lectureId']}  ${widget.courseModel.courseCode} ${widget.courseModel.department} ${widget.courseModel.section} ${widget.courseModel.batch} ${widget.courseModel.program}',
                                         version: QrVersions.auto,
                                         size: 200.0,
                                       ),

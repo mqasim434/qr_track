@@ -175,106 +175,110 @@ class CourseModel {
     }
   }
 
+  static Future<List<Map<String, dynamic>>>
+      getCoursesWithLecturesToday() async {
+    List<Map<String, dynamic>> coursesWithLectureIds = [];
 
-static Future<List<Map<String, dynamic>>> getCoursesWithLecturesToday() async {
-  List<Map<String, dynamic>> coursesWithLectureIds = [];
+    // Determine today's day of the week (e.g., Monday)
+    String todayDayName = DateFormat('EEEE').format(DateTime.now());
 
-  // Determine today's day of the week (e.g., Monday)
-  String todayDayName = DateFormat('EEEE').format(DateTime.now());
+    // Iterate through the courses list
+    for (CourseModel course in CourseModel.coursesList) {
+      if (course.lectures != null) {
+        // Iterate through the lectures of each course
+        for (Map<String, dynamic> lecture in course.lectures!) {
+          String lectureDay =
+              lecture['day']; // Assuming 'day' field in lecture map
 
-  // Iterate through the courses list
-  for (CourseModel course in CourseModel.coursesList) {
-    if (course.lectures != null) {
-      // Iterate through the lectures of each course
-      for (Map<String, dynamic> lecture in course.lectures!) {
-        String lectureDay = lecture['day']; // Assuming 'day' field in lecture map
-
-        // Compare if the lecture is scheduled for today
-        if (lectureDay.toLowerCase() == todayDayName.toLowerCase()) {
-          // Prepare course data as JSON
-          Map<String, dynamic> courseJson = course.toJson();
-
-          // Create a map for the course and lecture ID
-          Map<String, dynamic> courseWithLectureId = {
-            'course': courseJson,
-            'lecture': lecture, // Assuming 'lectureId' field in lecture map
-          };
-
-          // Add to the list
-          coursesWithLectureIds.add(courseWithLectureId);
-        }
-      }
-    }
-  }
-
-  // Return the list of courses with lectures today
-  return coursesWithLectureIds;
-}
-
-
- static Future<Map<String, dynamic>> getCurrentOngoingCourseWithLecture() async {
-  Map<String, dynamic> ongoingCourseWithLecture = {};
-
-  // Get current day of the week (e.g., Monday)
-  String todayDayName = DateFormat('EEEE').format(DateTime.now());
-
-  // Get current time in HH:mm format
-  String currentTime = DateFormat('HH:mm').format(DateTime.now());
-
-  // Iterate through the courses list
-  for (CourseModel course in CourseModel.coursesList) {
-    if (course.lectures != null) {
-      // Iterate through the lectures of each course
-      for (Map<String, dynamic> lecture in course.lectures!) {
-        String lectureDay = lecture['day']; // Assuming 'day' field in lecture map
-        String lectureStartTime = lecture['startTime']; // Assuming 'startTime' field in lecture map
-        String lectureEndTime = lecture['endTime']; // Assuming 'endTime' field in lecture map
-
-        // Compare if the lecture is scheduled for today and ongoing
-        if (lectureDay.toLowerCase() == todayDayName.toLowerCase()) {
-          if (isTimeBetween(currentTime, lectureStartTime, lectureEndTime)) {
+          // Compare if the lecture is scheduled for today
+          if (lectureDay.toLowerCase() == todayDayName.toLowerCase()) {
             // Prepare course data as JSON
             Map<String, dynamic> courseJson = course.toJson();
 
-            // Create a map for the course and lecture
-            ongoingCourseWithLecture = {
+            // Create a map for the course and lecture ID
+            Map<String, dynamic> courseWithLectureId = {
               'course': courseJson,
-              'lecture': lecture,
+              'lecture': lecture, // Assuming 'lectureId' field in lecture map
             };
 
-            // Return immediately after finding the ongoing lecture
-            return ongoingCourseWithLecture;
+            // Add to the list
+            coursesWithLectureIds.add(courseWithLectureId);
           }
         }
       }
     }
+
+    // Return the list of courses with lectures today
+    return coursesWithLectureIds;
   }
 
-  // Return an empty map if no ongoing lecture is found
-  return {};
-}
+  static Future<Map<String, dynamic>>
+      getCurrentOngoingCourseWithLecture() async {
+    Map<String, dynamic> ongoingCourseWithLecture = {};
+
+    // Get current day of the week (e.g., Monday)
+    String todayDayName = DateFormat('EEEE').format(DateTime.now());
+
+    // Get current time in HH:mm format
+    String currentTime = DateFormat('hh:mm a').format(DateTime.now());
+
+    print('current time ${currentTime}');
+
+    // Iterate through the courses list
+    for (CourseModel course in CourseModel.coursesList) {
+      if (course.lectures != null) {
+        // Iterate through the lectures of each course
+        for (Map<String, dynamic> lecture in course.lectures!) {
+          String lectureDay =
+              lecture['day']; // Assuming 'day' field in lecture map
+          String lectureStartTime =
+              lecture['startTime']; // Assuming 'startTime' field in lecture map
+          String lectureEndTime =
+              lecture['endTime']; // Assuming 'endTime' field in lecture map
+
+          // Compare if the lecture is scheduled for today and ongoing
+          if (lectureDay.toLowerCase() == todayDayName.toLowerCase()) {
+            if (isTimeBetween(currentTime, lectureStartTime, lectureEndTime)) {
+              // Prepare course data as JSON
+              Map<String, dynamic> courseJson = course.toJson();
+
+              // Create a map for the course and lecture
+              ongoingCourseWithLecture = {
+                'course': courseJson,
+                'lecture': lecture,
+              };
+
+              // Return immediately after finding the ongoing lecture
+              return ongoingCourseWithLecture;
+            }
+          }
+        }
+      }
+    }
+
+    // Return an empty map if no ongoing lecture is found
+    return {};
+  }
 
 // Function to check if current time is between start and end times
-static bool isTimeBetween(String currentTime, String startTime, String endTime) {
-  DateTime current = DateFormat('HH:mm').parse(currentTime);
-  DateTime start = DateFormat('HH:mm').parse(startTime);
-  DateTime end = DateFormat('HH:mm').parse(endTime);
+  static bool isTimeBetween(
+      String currentTime, String startTime, String endTime) {
+    DateTime current = DateFormat('HH:mm').parse(currentTime);
+    DateTime start = DateFormat('HH:mm').parse(startTime);
+    DateTime end = DateFormat('HH:mm').parse(endTime);
 
-  return current.isAfter(start) && current.isBefore(end);
-}
-
-
-  
+    return current.isAfter(start) && current.isBefore(end);
+  }
 }
 
 String generateRandomCourseId() {
-    String courseId = 'course-';
-    Random random = Random();
-    int min = 1000;
-    int max = 9999;
-    int id = min + random.nextInt(max - min + 1);
+  String courseId = 'course-';
+  Random random = Random();
+  int min = 1000;
+  int max = 9999;
+  int id = min + random.nextInt(max - min + 1);
 
-    courseId = courseId + id.toString();
+  courseId = courseId + id.toString();
 
-    return courseId;
-  }
+  return courseId;
+}

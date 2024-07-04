@@ -6,6 +6,7 @@ class AttendanceModel {
   String? rollNo;
   String? time;
   String? date;
+  String? day;
   String? status;
 
   AttendanceModel({
@@ -14,6 +15,7 @@ class AttendanceModel {
     this.rollNo,
     this.time,
     this.date,
+    this.day,
     this.status,
   });
 
@@ -23,6 +25,7 @@ class AttendanceModel {
     rollNo = json['rollNo'];
     time = json['time'];
     date = json['date'];
+    date = json['day'];
     status = json['status'];
   }
 
@@ -33,24 +36,26 @@ class AttendanceModel {
     data['rollNo'] = rollNo;
     data['time'] = time;
     data['date'] = date;
+    data['day'] = date;
     data['status'] = status;
     return data;
   }
 
-  static void addAttendance(String courseId, String lectureId, AttendanceModel attendance) async {
-  try {
-    
-    DocumentReference lectureRef = FirebaseFirestore.instance
-        .collection('courses')
-        .doc(courseId)
-        .collection('lectures')
-        .doc(lectureId);
-
-    // Add the attendance record to the lecture document
-    await lectureRef.collection('attendances').add(attendance.toJson());
-    print('Attendance added successfully!');
-  } catch (e) {
-    print('Error adding attendance: $e');
+  static void addAttendance(
+      {required String courseId,
+      required String lectureId,
+      required AttendanceModel attendance}) async {
+    try {
+      DocumentReference lectureRef = FirebaseFirestore.instance
+          .collection('courses')
+          .doc(courseId)
+          .collection('lectures')
+          .doc(lectureId);
+      // Add the attendance record to the lecture document
+      await lectureRef.collection('attendances').add(attendance.toJson());
+      print('Attendance added successfully!');
+    } catch (e) {
+      print('Error adding attendance: $e');
+    }
   }
-}
 }

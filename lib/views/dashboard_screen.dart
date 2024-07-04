@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:qr_track/models/attendance_model.dart';
 import 'package:qr_track/models/course_model.dart';
 import 'package:qr_track/models/user_model.dart';
 import 'package:qr_track/res/colors.dart';
@@ -49,6 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     coursesWithLecturesToday = await CourseModel.getCoursesWithLecturesToday();
     ongoingCourse = await CourseModel.getCurrentOngoingCourseWithLecture();
+    print(ongoingCourse);
     setState(() {});
   }
 
@@ -131,7 +133,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                (ongoingCourse != null && ongoingCourse!['course'] != null)
+                (ongoingCourse != null &&
+                        ongoingCourse!['course'] != null &&
+                        ongoingCourse!['lecture'] != null)
                     ? StreamBuilder(
                         stream: FirebaseFirestore.instance
                             .collection('qrCode')
@@ -175,26 +179,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       'Failed to scan QR Code'),
                                                 );
                                               });
+                                        } else if (value == "-1") {
+                                          return;
                                         } else {
                                           showDialog(
                                               context: context,
                                               builder: (context) {
-                                                return AlertDialog(
-                                                  title: Text(
-                                                      '${qrCodeData['qrCodeId']} ${UserModel.currentUser.department} ${UserModel.currentUser.department} ${UserModel.currentUser.section} ${UserModel.currentUser.batch} ${UserModel.currentUser.program}'),
-                                                  content: Text(value),
-                                                );
+                                                if (qrCodeData['qrCodeId'] ==
+                                                    value) {
+                                                  AttendanceModel.addAttendance(
+                                                    courseId:
+                                                        ongoingCourse!['course']
+                                                            ['courseId'],
+                                                    lectureId: ongoingCourse![
+                                                        'lecture']['lectureId'],
+                                                    attendance: AttendanceModel(
+                                                      studenName: UserModel
+                                                          .currentUser.fullName,
+                                                      rollNo: UserModel
+                                                          .currentUser.rollNo,
+                                                      time:
+                                                          '${TimeOfDay.now()}',
+                                                      day: UtilityFunctions
+                                                          .getWeekDayName(
+                                                              DateTime.now()
+                                                                  .day),
+                                                      date:
+                                                          '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                                                      status: AttendanceStatuses
+                                                          .Present.name,
+                                                    ),
+                                                  );
+                                                  return AlertDialog(
+                                                    title: Text(
+                                                        'Attendance Marked Successfully'),
+                                                  );
+                                                } else {
+                                                  return AlertDialog(
+                                                    title:
+                                                        Text('QR is expired'),
+                                                  );
+                                                }
                                               });
                                         }
                                       });
                                     }
                                   : () {
-                                      Navigator.push(context,
-                                          MaterialPageRoute(builder: (context) {
-                                        return CourseDetails(
-                                            courseModel: CourseModel.fromJson(
-                                                ongoingCourse!['course']));
-                                      }));
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) {
+                                            return CourseDetails(
+                                                courseModel:
+                                                    CourseModel.fromJson(
+                                                        ongoingCourse![
+                                                            'course']));
+                                          },
+                                        ),
+                                      );
                                     },
                               child: Card(
                                 color: AppColors.secondaryColor,

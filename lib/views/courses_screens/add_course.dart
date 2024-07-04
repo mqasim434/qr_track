@@ -12,6 +12,7 @@ import 'package:qr_track/models/user_model.dart';
 import 'package:qr_track/res/colors.dart';
 import 'package:qr_track/res/components/my_textfield.dart';
 import 'package:qr_track/res/components/rounded_rectangular_button.dart';
+import 'package:qr_track/services/dropdown_services.dart';
 import 'package:qr_track/views/courses_screens/studets_list.dart';
 
 class AddCourseScreen extends StatefulWidget {
@@ -156,6 +157,13 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                 MyTextField(
                     label: 'Department',
                     controller: departmentController,
+                    icon: Icons.arrow_drop_down,
+                    isReadOnly: true,
+                    ontap: () => showDropDownSheet(
+                          'Department',
+                          DropdownService.departments,
+                          departmentController,
+                        ),
                     validator: (value) {
                       if (value!.isEmpty) {
                         return "Department Can't be empty";
@@ -519,5 +527,41 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
         ),
       ),
     ));
+  }
+
+  showDropDownSheet(String placeholder, List<String> dropdownsList,
+      TextEditingController textEditingController) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Text(
+                'Select $placeholder',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: dropdownsList.length,
+                  itemBuilder: (context, index) => ListTile(
+                    onTap: () {
+                      textEditingController.text = dropdownsList[index];
+                      setState(() {});
+                      Navigator.pop(context);
+                    },
+                    title: Text(dropdownsList[index]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
