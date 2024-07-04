@@ -107,7 +107,9 @@ class _CourseDetailsState extends State<CourseDetails> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    _checkAndMarkAbsentees();
+    if (widget.isOnGoing) {
+      _checkAndMarkAbsentees();
+    }
     return SafeArea(
         child: widget.courseModel.lectures!.isEmpty
             ? Scaffold(

@@ -68,6 +68,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           MaterialPageRoute(
                             builder: (context) => CourseDetails(
                               courseModel: courseModel,
+                              isOnGoing: false,
+                              onGoingLectureId: 'noLecture',
                             ),
                           ),
                         );

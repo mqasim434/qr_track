@@ -26,6 +26,7 @@ class _DashboardState extends State<Dashboard> {
         body: PageView(
             controller: pageController,
             allowImplicitScrolling: false,
+            physics: NeverScrollableScrollPhysics(),
             children: screensList),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
