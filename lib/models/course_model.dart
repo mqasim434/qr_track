@@ -220,7 +220,7 @@ class CourseModel {
     String todayDayName = DateFormat('EEEE').format(DateTime.now());
 
     // Get current time in HH:mm format
-    String currentTime = DateFormat('hh:mm a').format(DateTime.now());
+    String currentTime = DateFormat('HH:mm').format(DateTime.now());
 
     print('current time ${currentTime}');
 

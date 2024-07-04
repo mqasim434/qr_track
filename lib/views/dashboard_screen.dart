@@ -54,6 +54,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {});
   }
 
+  String message = '';
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -181,13 +183,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               });
                                         } else if (value == "-1") {
                                           return;
-                                        } else {
-                                          showDialog(
+                                        } else if (_hasLectureTimePassed(
+                                            ongoingCourse!['lecture']
+                                                ['startTime'],
+                                            45)) {
+                                          AttendanceModel.addAttendance(
+                                            courseId: ongoingCourse!['course']
+                                                ['courseId'],
+                                            lectureId: ongoingCourse!['lecture']
+                                                ['lectureId'],
+                                            attendance: AttendanceModel(
+                                              studenName: UserModel
+                                                  .currentUser.fullName,
+                                              rollNo:
+                                                  UserModel.currentUser.rollNo,
+                                              time:
+                                                  '${TimeOfDay.now().hour}:${TimeOfDay.now().minute}',
+                                              day: UtilityFunctions
+                                                  .getWeekDayName(
+                                                      DateTime.now().day),
+                                              date:
+                                                  '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                                              status: AttendanceStatuses
+                                                  .Absent.name,
+                                            ),
+                                          ).then((msg) {
+                                            showDialog(
                                               context: context,
                                               builder: (context) {
-                                                if (qrCodeData['qrCodeId'] ==
-                                                    value) {
-                                                  AttendanceModel.addAttendance(
+                                                return AlertDialog(
+                                                  title:
+                                                      Text('Attendance Status'),
+                                                  content: Text(msg),
+                                                );
+                                              },
+                                            );
+                                          });
+                                        } else {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              if (qrCodeData['qrCodeId'] ==
+                                                  value) {
+                                                return FutureBuilder<String>(
+                                                  future: AttendanceModel
+                                                      .addAttendance(
                                                     courseId:
                                                         ongoingCourse!['course']
                                                             ['courseId'],
@@ -199,7 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       rollNo: UserModel
                                                           .currentUser.rollNo,
                                                       time:
-                                                          '${TimeOfDay.now()}',
+                                                          '${TimeOfDay.now().hour}:${TimeOfDay.now().minute}',
                                                       day: UtilityFunctions
                                                           .getWeekDayName(
                                                               DateTime.now()
@@ -209,18 +249,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       status: AttendanceStatuses
                                                           .Present.name,
                                                     ),
-                                                  );
-                                                  return AlertDialog(
-                                                    title: Text(
-                                                        'Attendance Marked Successfully'),
-                                                  );
-                                                } else {
-                                                  return AlertDialog(
-                                                    title:
-                                                        Text('QR is expired'),
-                                                  );
-                                                }
-                                              });
+                                                  ),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot
+                                                            .connectionState ==
+                                                        ConnectionState
+                                                            .waiting) {
+                                                      return AlertDialog(
+                                                        title: Text(
+                                                            'Processing...'),
+                                                      );
+                                                    } else if (snapshot
+                                                        .hasError) {
+                                                      return AlertDialog(
+                                                        title: Text('Error'),
+                                                        content: Text(snapshot
+                                                            .error
+                                                            .toString()),
+                                                      );
+                                                    } else if (snapshot
+                                                        .hasData) {
+                                                      return AlertDialog(
+                                                        title: Text(
+                                                            'Attendance Status'),
+                                                        content: Text(snapshot
+                                                                .data ??
+                                                            'Unknown error'),
+                                                      );
+                                                    } else {
+                                                      return AlertDialog(
+                                                        title: Text(
+                                                            'Unknown state'),
+                                                      );
+                                                    }
+                                                  },
+                                                );
+                                              } else {
+                                                return AlertDialog(
+                                                  title: Text('QR is expired'),
+                                                );
+                                              }
+                                            },
+                                          );
                                         }
                                       });
                                     }
@@ -230,10 +300,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         MaterialPageRoute(
                                           builder: (context) {
                                             return CourseDetails(
-                                                courseModel:
-                                                    CourseModel.fromJson(
-                                                        ongoingCourse![
-                                                            'course']));
+                                              courseModel: CourseModel.fromJson(
+                                                  ongoingCourse!['course']),
+                                              isOnGoing: true,
+                                              onGoingLectureId:
+                                                  ongoingCourse!['lecture']
+                                                      ['lectureId'],
+                                            );
                                           },
                                         ),
                                       );
@@ -322,6 +395,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  bool _hasLectureTimePassed(String startTimeString, int allowedTime) {
+    final timeParts = startTimeString.split(' ');
+    final time = timeParts[0];
+    final period = timeParts[1].toLowerCase();
+
+    final timeComponents = time.split(':');
+    int hour = int.parse(timeComponents[0]);
+    final int minute = int.parse(timeComponents[1]);
+
+    if (period == 'pm' && hour != 12) {
+      hour += 12;
+    } else if (period == 'am' && hour == 12) {
+      hour = 0;
+    }
+
+    final startTime = DateTime(DateTime.now().year, DateTime.now().month,
+        DateTime.now().day, hour, minute);
+    final now = DateTime.now();
+    final duration = now.difference(startTime);
+
+    return duration.inMinutes >= allowedTime;
   }
 }
 

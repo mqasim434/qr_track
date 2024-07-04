@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:qr_track/models/attendance_model.dart';
 import 'package:qr_track/models/course_model.dart';
 import 'package:qr_track/res/colors.dart';
+import 'package:qr_track/res/enums.dart';
 
 class AttendanceListScreen extends StatefulWidget {
   const AttendanceListScreen({
@@ -28,7 +29,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   Future<void> getAttendances() async {
     QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore
         .instance
-        .collection('courses')
+        .collection('attendances')
         .doc(widget.courseModel.courseId)
         .collection('lectures')
         .doc(widget.lectureId)
@@ -158,7 +159,10 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                                 .split('y')
                                 .last),
                             trailing: Chip(
-                              backgroundColor: Colors.green,
+                              backgroundColor: attendanceModel.status ==
+                                      AttendanceStatuses.Present.name
+                                  ? Colors.green
+                                  : AppColors.errorColor,
                               label: Text(
                                 attendanceModel.status.toString(),
                                 style: TextStyle(color: Colors.white),
