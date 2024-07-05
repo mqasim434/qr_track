@@ -23,6 +23,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Map<String, dynamic>>? coursesWithLecturesToday;
   String? currentQrId;
 
+  // Postition? postition;
+
+// Future<Position> _determinePosition() async {
+//   bool serviceEnabled;
+//   LocationPermission permission;
+
+//   serviceEnabled = await Geolocator.isLocationServiceEnabled();
+//   if (!serviceEnabled) {
+//     return Future.error('Location services are disabled.');
+//   }
+
+//   permission = await Geolocator.checkPermission();
+//   if (permission == LocationPermission.denied) {
+//     permission = await Geolocator.requestPermission();
+//     if (permission == LocationPermission.denied) {
+//       return Future.error('Location permissions are denied');
+//     }
+//   }
+
+//   if (permission == LocationPermission.deniedForever) {
+//     return Future.error(
+//       'Location permissions are permanently denied, we cannot request permissions.');
+//   }
+
+//   return await Geolocator.getCurrentPosition();
+// }
+
   Future<String> scanQr(String currentQrCodeID) async {
     String qrResult = 'Scanned Data Will Appear here';
     try {
@@ -51,6 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     coursesWithLecturesToday = await CourseModel.getCoursesWithLecturesToday();
     ongoingCourse = await CourseModel.getCurrentOngoingCourseWithLecture();
     print(ongoingCourse);
+    // position = await _determinePosition();
     setState(() {});
   }
 
@@ -198,6 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 ['courseId'],
                                             lectureId: ongoingCourse!['lecture']
                                                 ['lectureId'],
+                                                
                                             attendance: AttendanceModel(
                                               studenName: UserModel
                                                   .currentUser.fullName,
@@ -207,6 +236,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       .toString(),
                                               rollNo:
                                                   UserModel.currentUser.rollNo,
+                                                  // locationLat: position.lat as double,
+                                                  // locationLng: position.lng as double,
                                               time:
                                                   '${TimeOfDay.now().hour}:${TimeOfDay.now().minute}',
                                               day: UtilityFunctions

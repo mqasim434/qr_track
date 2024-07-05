@@ -7,6 +7,7 @@ import 'package:qr_track/models/attendance_model.dart';
 import 'package:qr_track/models/course_model.dart';
 import 'package:qr_track/models/user_model.dart';
 import 'package:qr_track/res/enums.dart';
+import 'package:qr_track/views/attendances_screens/attendance_location_screen.dart';
 
 class CourseAttendancesScreen extends StatefulWidget {
   const CourseAttendancesScreen({super.key, required this.courseModel});
@@ -134,26 +135,35 @@ class _CourseAttendancesScreenState extends State<CourseAttendancesScreen> {
                         ? ListView.builder(
                             itemCount: filteredAttendances.length,
                             itemBuilder: (context, index) {
-                              return ListTile(
-                                title: UserModel.currentUser.userType ==
-                                        UserRoles.Student.name
-                                    ? Text(filteredAttendances[index]
-                                        .day
-                                        .toString())
-                                    : Text(filteredAttendances[index]
-                                        .studenName
-                                        .toString()),
-                                subtitle: Text(
-                                    'Date: ${filteredAttendances[index].date ?? 'time'} - Time: ${filteredAttendances[index].time ?? 'time'}'),
-                                trailing: Chip(
-                                  backgroundColor:
-                                      filteredAttendances[index].status ==
-                                              AttendanceStatuses.Present.name
-                                          ? Colors.green
-                                          : Colors.red,
-                                  label: Text(
-                                      filteredAttendances[index].status ??
-                                          'Status'),
+                              return InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              LocationAttendanceScreen()));
+                                },
+                                child: ListTile(
+                                  title: UserModel.currentUser.userType ==
+                                          UserRoles.Student.name
+                                      ? Text(filteredAttendances[index]
+                                          .day
+                                          .toString())
+                                      : Text(filteredAttendances[index]
+                                          .studenName
+                                          .toString()),
+                                  subtitle: Text(
+                                      'Date: ${filteredAttendances[index].date ?? 'time'} - Time: ${filteredAttendances[index].time ?? 'time'}\nClick to view attendance Location'),
+                                  trailing: Chip(
+                                    backgroundColor:
+                                        filteredAttendances[index].status ==
+                                                AttendanceStatuses.Present.name
+                                            ? Colors.green
+                                            : Colors.red,
+                                    label: Text(
+                                        filteredAttendances[index].status ??
+                                            'Status'),
+                                  ),
                                 ),
                               );
                             })

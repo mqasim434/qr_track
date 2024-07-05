@@ -190,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 builder: (context) {
                                                   return Container(
                                                     padding: EdgeInsets.all(20),
-                                                    height: 500,
+                                                    height: 550,
                                                     width: double.infinity,
                                                     child: Column(
                                                       children: [
