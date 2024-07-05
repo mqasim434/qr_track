@@ -85,7 +85,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     UserModel.currentUser.fullName ?? 'null',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
-                  trailing: Icon(Icons.person_4, size: 60),
+                  trailing: Icon(
+                      UserModel.currentUser.userType == UserRoles.Student.name
+                          ? Icons.person
+                          : Icons.person_4,
+                      size: 60),
                 ),
                 SizedBox(
                   height: 16,
@@ -187,6 +191,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             ongoingCourse!['lecture']
                                                 ['startTime'],
                                             45)) {
+                                          print(ongoingCourse!['lecture']
+                                              ['lectureId']);
                                           AttendanceModel.addAttendance(
                                             courseId: ongoingCourse!['course']
                                                 ['courseId'],
@@ -195,6 +201,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             attendance: AttendanceModel(
                                               studenName: UserModel
                                                   .currentUser.fullName,
+                                              lectureId:
+                                                  ongoingCourse!['lecture']
+                                                          ['lectureId']
+                                                      .toString(),
                                               rollNo:
                                                   UserModel.currentUser.rollNo,
                                               time:
@@ -225,6 +235,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             builder: (context) {
                                               if (qrCodeData['qrCodeId'] ==
                                                   value) {
+                                                print('Marking Attendance');
+                                                print(ongoingCourse!['lecture']
+                                                    ['lectureId']);
                                                 return FutureBuilder<String>(
                                                   future: AttendanceModel
                                                       .addAttendance(
@@ -232,7 +245,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                         ongoingCourse!['course']
                                                             ['courseId'],
                                                     lectureId: ongoingCourse![
-                                                        'lecture']['lectureId'],
+                                                                'lecture']
+                                                            ['lectureId']
+                                                        .toString(),
                                                     attendance: AttendanceModel(
                                                       studenName: UserModel
                                                           .currentUser.fullName,

@@ -18,7 +18,6 @@ class _DashboardState extends State<Dashboard> {
   ];
   int currentIndex = 0;
   PageController pageController = PageController();
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(

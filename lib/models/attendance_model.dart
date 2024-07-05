@@ -6,41 +6,53 @@ import 'package:qr_track/res/utility_functions.dart';
 class AttendanceModel {
   String? attendanceId;
   String? studenName;
+  String? lectureId;
   String? rollNo;
   String? time;
   String? date;
   String? day;
   String? status;
+  double? locationLat;
+  double? locationLng;
 
   AttendanceModel({
     this.attendanceId,
     this.studenName,
+    this.lectureId,
     this.rollNo,
     this.time,
     this.date,
     this.day,
     this.status,
+    this.locationLat,
+    this.locationLng,
   });
 
   AttendanceModel.fromJson(Map<String, dynamic> json) {
     attendanceId = json['attendanceId'];
     studenName = json['studenName'];
+    lectureId = json['lectureId'];
     rollNo = json['rollNo'];
     time = json['time'];
     date = json['date'];
-    date = json['day'];
+    day = json['day'];
     status = json['status'];
+    locationLat = json['locationLat'];
+    locationLng = json['locationLng'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['attendanceId'] = attendanceId;
     data['studenName'] = studenName;
+    data['lectureId'] = lectureId;
     data['rollNo'] = rollNo;
     data['time'] = time;
     data['date'] = date;
-    data['day'] = date;
+    data['day'] = day;
     data['status'] = status;
+    data['locationLat'] = locationLat;
+    data['locationLng'] = locationLng;
     return data;
   }
 
@@ -50,6 +62,9 @@ class AttendanceModel {
     required AttendanceModel attendance,
   }) async {
     try {
+      // Ensure the lectureId is set in the attendance model
+      attendance.lectureId = lectureId;
+
       final querySnapshot = await FirebaseFirestore.instance
           .collection('attendances')
           .doc(courseId)
@@ -69,7 +84,7 @@ class AttendanceModel {
             .add(attendance.toJson());
         print('Attendance added successfully!');
         if (attendance.status == AttendanceStatuses.Absent.name) {
-          return 'Attendance marked as Absent to to late Check In';
+          return 'Attendance marked as Absent due to late Check In';
         } else {
           return 'Attendance marked as Present';
         }
@@ -115,6 +130,7 @@ class AttendanceModel {
           date:
               '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
           status: AttendanceStatuses.Absent.name,
+          lectureId: lectureId, // Ensure lectureId is set here as well
         );
 
         await AttendanceModel.addAttendance(

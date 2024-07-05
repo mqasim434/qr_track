@@ -6,6 +6,7 @@ import 'package:qr_track/res/colors.dart';
 import 'package:qr_track/services/registration_services.dart';
 import 'package:qr_track/services/theme_service.dart';
 import 'package:qr_track/views/about_screen.dart';
+import 'package:qr_track/views/attendances_screens/atttendances_screen.dart';
 import 'package:qr_track/views/profile_screen.dart';
 import 'package:qr_track/views/registration/signin_screen.dart';
 
@@ -67,16 +68,27 @@ class _MoreScreenState extends State<MoreScreen> {
                       },
                     ),
                     ToffeeWidget(
-                      label: "About",
-                      iconData: Icons.info,
+                      label: "Attendances",
+                      iconData: Icons.list,
                       onPress: () {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => AboutPage()));
+                                builder: (context) => AttendancesScreen()));
                       },
                     ),
                   ],
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                ToffeeWidget(
+                  label: "About",
+                  iconData: Icons.info,
+                  onPress: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => AboutPage()));
+                  },
                 ),
                 SizedBox(
                   height: 16,

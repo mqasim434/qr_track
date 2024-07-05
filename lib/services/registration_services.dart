@@ -80,7 +80,7 @@ class RegistrationServices {
           email: email,
           fullName: fullName,
           teacherId: teacherId,
-          userType: userRole.name, // Set userType to userRole.name
+          userType: userRole.name,
         );
         await _firestore
             .collection(UtilityFunctions.getCollectionName(userRole.name))
@@ -93,7 +93,7 @@ class RegistrationServices {
           email: email,
           fullName: fullName,
           rollNo: rollNo,
-          userType: userRole.name, // Set userType to userRole.name
+          userType: userRole.name,
         );
         await _firestore
             .collection(UtilityFunctions.getCollectionName(userRole.name))

@@ -208,6 +208,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         RoundedRectangularButton(
                           label: 'Sign up',
                           onPress: () {
+                            print(selectedRole.name);
                             if (formKey.currentState!.validate()) {
                               RegistrationServices.signUpWithEmailPassword(
                                       email: emailController.text,

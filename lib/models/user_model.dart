@@ -102,6 +102,7 @@ class StudentModel extends UserModel {
     data['fullName'] = fullName;
     data['email'] = email;
     data['profileImage'] = profileImage;
+    data['userType'] = userType;
     data['rollNo'] = rollNo;
     data['department'] = department;
     data['section'] = section;
