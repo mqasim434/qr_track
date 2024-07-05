@@ -114,7 +114,7 @@ class StudentModel extends UserModel {
     return data;
   }
 
-  void updateField(String field, dynamic value) {
+   void updateField(String field, dynamic value) {
     switch (field) {
       case 'fullName':
         fullName = value;

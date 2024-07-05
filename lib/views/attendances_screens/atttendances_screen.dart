@@ -48,10 +48,18 @@ class _AttendancesScreenState extends State<AttendancesScreen> {
                     color: Colors.white,
                   ),
                   title: Text(
-                    'Course Title',
+                    CourseModel.coursesList[index].courseTitle.toString(),
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Course Code: ${CourseModel.coursesList[index].courseCode.toString()}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

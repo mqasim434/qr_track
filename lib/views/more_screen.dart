@@ -1,9 +1,14 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_track/models/user_model.dart';
 import 'package:qr_track/res/colors.dart';
+import 'package:qr_track/res/utility_functions.dart';
 import 'package:qr_track/services/registration_services.dart';
+import 'package:qr_track/services/session_management_services.dart';
 import 'package:qr_track/services/theme_service.dart';
 import 'package:qr_track/views/about_screen.dart';
 import 'package:qr_track/views/attendances_screens/atttendances_screen.dart';
@@ -18,6 +23,63 @@ class MoreScreen extends StatefulWidget {
 }
 
 class _MoreScreenState extends State<MoreScreen> {
+  Future<void> updatePassword(String newPassword) async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    try {
+      await user?.updatePassword(newPassword);
+    } catch (e) {
+      // Handle error
+      print('Password update failed: $e');
+    }
+  }
+
+  Future<void> updateUserField(String field, String value) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot =
+          await FirebaseFirestore.instance
+              .collection(UtilityFunctions.getCollectionName(
+                  UserModel.currentUser.userType))
+              .where('email',
+                  isEqualTo: FirebaseAuth.instance.currentUser!.email)
+              .limit(1)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        String userId = querySnapshot.docs.first.id;
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({field: value});
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${field} updated successfully')));
+        UserModel.getUserData(
+            UtilityFunctions.getCollectionName(UserModel.currentUser.userType),
+            UserModel.currentUser.email);
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('User not found')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to update name: $e')));
+    }
+  }
+
+  Future<void> reAuthenticateUser(String email, String currentPassword) async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    AuthCredential credential =
+        EmailAuthProvider.credential(email: email, password: currentPassword);
+
+    try {
+      await user?.reauthenticateWithCredential(credential);
+    } catch (e) {
+      // Handle error
+      print('ReAuthentication failed: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -59,12 +121,142 @@ class _MoreScreenState extends State<MoreScreen> {
                   children: [
                     ToffeeWidget(
                       label: "Change Password",
-                      iconData: Icons.person,
+                      iconData: Icons.change_circle,
                       onPress: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (context) {
-                          return ProfileScreen();
-                        }));
+                        final passwordFormKey = GlobalKey<FormState>();
+                        final TextEditingController currentPasswordController =
+                            TextEditingController();
+                        final TextEditingController newPasswordController =
+                            TextEditingController();
+                        final TextEditingController cNewPasswordController =
+                            TextEditingController();
+                        showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text("Change Password"),
+                                content: Form(
+                                  key: passwordFormKey,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      TextFormField(
+                                        controller: currentPasswordController,
+                                        decoration: InputDecoration(
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.all(10),
+                                            hintText: "Current Password"),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextFormField(
+                                          controller: newPasswordController,
+                                          decoration: InputDecoration(
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              contentPadding:
+                                                  const EdgeInsets.all(10),
+                                              hintText: "New Password"),
+                                          validator: (value) {
+                                            if (value!.isEmpty) {
+                                              return "Field can't be empty";
+                                            } else if (value ==
+                                                currentPasswordController
+                                                    .text) {
+                                              return "Old and New Password can't be same";
+                                            } else if (value !=
+                                                cNewPasswordController.text) {
+                                              return "Confirm New Password";
+                                            } else {
+                                              return null;
+                                            }
+                                          }),
+                                      const SizedBox(height: 10),
+                                      TextFormField(
+                                          controller: cNewPasswordController,
+                                          decoration: InputDecoration(
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              contentPadding:
+                                                  const EdgeInsets.all(10),
+                                              hintText: "Confirm New Password"),
+                                          validator: (value) {
+                                            if (value!.isEmpty) {
+                                              return "Field can't be empty";
+                                            } else if (value ==
+                                                currentPasswordController
+                                                    .text) {
+                                              return "Old and New Password can't be same";
+                                            } else if (value !=
+                                                newPasswordController.text) {
+                                              return "Confirm New Password";
+                                            } else {
+                                              return null;
+                                            }
+                                          }),
+                                      const SizedBox(height: 10),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            maximumSize: Size(
+                                                MediaQuery.of(context)
+                                                    .size
+                                                    .width,
+                                                50),
+                                            minimumSize: Size(
+                                                MediaQuery.of(context)
+                                                    .size
+                                                    .width,
+                                                50),
+                                            backgroundColor: Colors.deepPurple),
+                                        onPressed: () async {
+                                          if (passwordFormKey.currentState!
+                                              .validate()) {
+                                            reAuthenticateUser(
+                                                    UserModel.currentUser!.email
+                                                        .toString(),
+                                                    currentPasswordController
+                                                        .text)
+                                                .then((value) {
+                                              updatePassword(
+                                                  newPasswordController.text);
+                                              updateUserField(
+                                                      "password",
+                                                      newPasswordController
+                                                          .text)
+                                                  .then((value) async {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(const SnackBar(
+                                                        content: Text(
+                                                            "Password Updated Successfully")));
+                                                SessionManagementService
+                                                        .destroySession()
+                                                    .then((value) {
+                                                  Navigator.pop(context);
+                                                });
+                                              });
+                                            });
+                                          }
+                                        },
+                                        child: const Text(
+                                          'Change Password',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            });
                       },
                     ),
                     ToffeeWidget(
@@ -82,37 +274,37 @@ class _MoreScreenState extends State<MoreScreen> {
                 SizedBox(
                   height: 16,
                 ),
-                ToffeeWidget(
-                  label: "About",
-                  iconData: Icons.info,
-                  onPress: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => AboutPage()));
-                  },
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    ToffeeWidget(
+                      label: "About",
+                      iconData: Icons.info,
+                      onPress: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AboutPage()));
+                      },
+                    ),
+                    ToffeeWidget(
+                      label: "Logout",
+                      iconData: Icons.logout,
+                      color: AppColors.errorColor,
+                      onPress: () {
+                        RegistrationServices.logoutUser().then((value) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                                builder: (context) => SigninScreen()),
+                            (Route<dynamic> route) => false,
+                          );
+                        });
+                      },
+                    ),
+                  ],
                 ),
                 SizedBox(
                   height: 16,
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(
-                      MediaQuery.of(context).size.width,
-                      50,
-                    ),
-                    backgroundColor: AppColors.primaryColor,
-                  ),
-                  onPressed: () {
-                    RegistrationServices.logoutUser().then((value) {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => SigninScreen()),
-                        (Route<dynamic> route) => false,
-                      );
-                    });
-                  },
-                  child: Text(
-                    'Logout',
-                    style: TextStyle(color: Colors.white),
-                  ),
                 ),
               ],
             ),
@@ -122,16 +314,17 @@ class _MoreScreenState extends State<MoreScreen> {
 }
 
 class ToffeeWidget extends StatelessWidget {
-  const ToffeeWidget({
-    super.key,
-    required this.label,
-    required this.iconData,
-    required this.onPress,
-  });
+  const ToffeeWidget(
+      {super.key,
+      required this.label,
+      required this.iconData,
+      required this.onPress,
+      this.color = AppColors.secondaryColor});
 
   final String? label;
   final IconData? iconData;
   final Function onPress;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -143,10 +336,7 @@ class ToffeeWidget extends StatelessWidget {
         width: screenWidth * 0.4,
         height: screenHeight * 0.2,
         decoration: BoxDecoration(
-          color: Provider.of<ThemeService>(context).currentThemeMode ==
-                  'Light Theme'
-              ? AppColors.secondaryColor
-              : AppColors.primaryColor,
+          color: color,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Center(
