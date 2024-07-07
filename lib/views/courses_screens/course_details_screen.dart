@@ -46,6 +46,7 @@ class _CourseDetailsState extends State<CourseDetails> {
           .doc('latestQrCode')
           .set({'qrCodeId': qrCodeId}, SetOptions(merge: true)).then((_) {
         print("QR Code ID updated successfully!");
+        setState(() {});
       }).catchError((error) {
         print("Failed to update QR Code ID: $error");
       });
@@ -56,14 +57,12 @@ class _CourseDetailsState extends State<CourseDetails> {
 
   @override
   void initState() {
+    super.initState();
     qrId = getRandomQrId();
     setState(() {});
     Timer.periodic(Duration(seconds: 10), (timer) {
       qrId = getRandomQrId();
-      setState(() {});
     });
-
-    super.initState();
   }
 
   DateTime parseTime(String timeString) {
@@ -197,6 +196,8 @@ class _CourseDetailsState extends State<CourseDetails> {
                                         MaterialPageRoute(
                                           builder: (context) => StudentsList(
                                             studentsData: studentsList,
+                                            course: widget.courseModel,
+                                            isViewing: true,
                                           ),
                                         ),
                                       );

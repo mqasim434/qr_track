@@ -9,20 +9,24 @@ class MyTextField extends StatelessWidget {
     required this.controller,
     this.isNumber = false,
     this.isPassword = false,
+    this.showPassword = true,
     this.isReadOnly = false,
     required this.validator,
     this.ontap,
+    this.onEyetap,
     this.icon,
   });
 
   final String? label;
   final bool isPassword;
   final bool isNumber;
+  final bool showPassword;
   final bool isReadOnly;
   final IconData? icon;
   final TextEditingController controller;
   final String? Function(String? value) validator;
   final void Function()? ontap;
+  final void Function()? onEyetap;
 
   @override
   Widget build(BuildContext context) {
@@ -43,9 +47,18 @@ class MyTextField extends StatelessWidget {
             vertical: 10,
             horizontal: 20,
           ),
-          suffixIcon: isPassword ? Icon(Icons.remove_red_eye) : null,
+          suffixIcon: isPassword
+              ? InkWell(
+                  onTap: onEyetap,
+                  child: Icon(
+                    showPassword
+                        ? Icons.remove_red_eye
+                        : Icons.remove_red_eye_outlined,
+                  ),
+                )
+              : null,
         ),
-        obscureText: isPassword,
+        obscureText: isPassword ? showPassword : false,
         validator: validator,
       ),
     );

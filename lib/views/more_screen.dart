@@ -120,7 +120,7 @@ class _MoreScreenState extends State<MoreScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     ToffeeWidget(
-                      label: "Change Password",
+                      label: "Change\nPassword",
                       iconData: Icons.change_circle,
                       onPress: () {
                         final passwordFormKey = GlobalKey<FormState>();

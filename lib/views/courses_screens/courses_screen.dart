@@ -103,6 +103,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         floatingActionButton:
             UserModel.currentUser.userType == UserRoles.Teacher.name
                 ? FloatingActionButton(
+                    backgroundColor: AppColors.primaryColor,
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -110,11 +111,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           builder: (context) => AddCourseScreen(),
                         ),
                       ).then((_) {
-                        fetchCourses(); // Refresh the course list after adding a new course
+                        fetchCourses();
                       });
                     },
                     child: Icon(
                       Icons.add,
+                      color: Colors.white,
                     ),
                   )
                 : SizedBox(),

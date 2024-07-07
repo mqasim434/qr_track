@@ -27,6 +27,8 @@ class _SigninScreenState extends State<SigninScreen> {
 
   final formKey = GlobalKey<FormState>();
 
+  bool hidePassword = true;
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -137,7 +139,14 @@ class _SigninScreenState extends State<SigninScreen> {
                         ),
                         MyTextField(
                           label: 'Password',
+                          isPassword: true,
+                          showPassword: hidePassword,
                           controller: passwordController,
+                          onEyetap: () {
+                            setState(() {
+                              hidePassword = !hidePassword;
+                            });
+                          },
                           validator: (value) {
                             if (value!.isEmpty) {
                               return "Password Can't be empty";

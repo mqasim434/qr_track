@@ -28,6 +28,8 @@ class _SignupScreenState extends State<SignupScreen> {
   TextEditingController confirmPasswordController = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
+  bool hidePassword = true;
+  bool hidePassword2 = true;
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +177,12 @@ class _SignupScreenState extends State<SignupScreen> {
                           label: 'Password',
                           controller: passwordController,
                           isPassword: true,
+                          showPassword: hidePassword,
+                          onEyetap: () {
+                            setState(() {
+                              hidePassword = !hidePassword;
+                            });
+                          },
                           validator: (value) {
                             if (value!.isEmpty) {
                               return "Password Can't be empty";
@@ -188,7 +196,13 @@ class _SignupScreenState extends State<SignupScreen> {
                         MyTextField(
                           label: 'Confirm Password',
                           controller: confirmPasswordController,
+                          showPassword: hidePassword2,
                           isPassword: true,
+                          onEyetap: () {
+                            setState(() {
+                              hidePassword2 = !hidePassword2;
+                            });
+                          },
                           validator: (value) {
                             if (value!.isEmpty) {
                               return "Password Can't be empty";

@@ -70,6 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchCourses() async {
+    // if (CourseModel.coursesList.isNotEmpty) {
     if (UserModel.currentUser.userType == UserRoles.Teacher.name) {
       await CourseModel.fetchTeacherCourses();
     } else if (UserModel.currentUser.userType == UserRoles.Student.name) {
@@ -80,6 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     print(ongoingCourse);
     // position = await _determinePosition();
     setState(() {});
+    // }
   }
 
   String message = '';
@@ -226,7 +228,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 ['courseId'],
                                             lectureId: ongoingCourse!['lecture']
                                                 ['lectureId'],
-                                                
                                             attendance: AttendanceModel(
                                               studenName: UserModel
                                                   .currentUser.fullName,
@@ -236,8 +237,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       .toString(),
                                               rollNo:
                                                   UserModel.currentUser.rollNo,
-                                                  // locationLat: position.lat as double,
-                                                  // locationLng: position.lng as double,
+                                              // locationLat: position.lat as double,
+                                              // locationLng: position.lng as double,
                                               time:
                                                   '${TimeOfDay.now().hour}:${TimeOfDay.now().minute}',
                                               day: UtilityFunctions

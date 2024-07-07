@@ -1,9 +1,8 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors
 
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -11,7 +10,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:qr_track/models/user_model.dart';
 import 'package:qr_track/res/colors.dart';
 import 'package:qr_track/res/utility_functions.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:qr_track/services/registration_services.dart';
+import 'package:qr_track/views/registration/signin_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -43,11 +43,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .update({field: value});
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${field} updated successfully')));
-        UserModel.getUserData(
-                UserModel.currentUser.userType, UserModel.currentUser.email)
-            .then((value) {
-          setState(() {});
-        });
+        await UserModel.getUserData(
+            UserModel.currentUser.userType, UserModel.currentUser.email);
+        setState(() {});
       } else {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('User not found')));
@@ -55,31 +53,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Failed to update name: $e')));
-    }
-  }
-
-  Future<void> reAuthenticateUser(String email, String currentPassword) async {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    AuthCredential credential =
-        EmailAuthProvider.credential(email: email, password: currentPassword);
-
-    try {
-      await user?.reauthenticateWithCredential(credential);
-    } catch (e) {
-      // Handle error
-      print('ReAuthentication failed: $e');
-    }
-  }
-
-  Future<void> updatePassword(String newPassword) async {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    try {
-      await user?.updatePassword(newPassword);
-    } catch (e) {
-      // Handle error
-      print('Password update failed: $e');
     }
   }
 
@@ -93,18 +66,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       String downloadUrl = await snapshot.ref.getDownloadURL();
 
-      updateUserField("profileImage", downloadUrl).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Image Uploaded. Download URL: $downloadUrl")),
-        );
+      await updateUserField("profileImage", downloadUrl);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Image Uploaded. Download URL: $downloadUrl")),
+      );
+
+      setState(() {
+        UserModel.currentUser.profileImage = downloadUrl;
       });
+
       print("Download URL: $downloadUrl");
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to upload image: $e")),
       );
+    } finally {
+      EasyLoading.dismiss();
     }
-    EasyLoading.dismiss();
   }
 
   @override
@@ -116,7 +95,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Profile',
           ),
           centerTitle: true,
-          automaticallyImplyLeading: false,
         ),
         body: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -128,8 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 100,
-                      backgroundColor: Colors.grey[
-                          200], // You can set a background color if needed
+                      backgroundColor: Colors.grey[200],
                       child: UserModel.currentUser != null
                           ? (UserModel.currentUser!.profileImage != null &&
                                   UserModel
@@ -216,8 +193,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                           height: 20,
                                                         ),
                                                         ElevatedButton(
-                                                            onPressed: () {
-                                                              uploadFileToFirebase(
+                                                            onPressed: () async{
+                                                               uploadFileToFirebase(
                                                                       File(pickedImage
                                                                           .path),
                                                                       context)
@@ -510,10 +487,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       minimumSize: Size(MediaQuery.of(context).size.width, 50),
                       backgroundColor: AppColors.primaryColor),
                   onPressed: () async {
-                    SharedPreferences sharedPreferences =
-                        await SharedPreferences.getInstance();
-                    sharedPreferences.clear();
-                    FirebaseAuth.instance.signOut();
+                    RegistrationServices.logoutUser().then((value) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => SigninScreen()),
+                        (Route<dynamic> route) => false,
+                      );
+                    });
                   },
                   child: const Text(
                     'Logout',

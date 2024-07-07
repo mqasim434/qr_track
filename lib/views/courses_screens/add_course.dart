@@ -266,6 +266,9 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                                       'roomLabel': roomLabelController.text,
                                       'day': dayController.text,
                                     });
+                                    CourseModel.fetchStudentCourses();
+                                    CourseModel.fetchTeacherCourses();
+                                    setState(() {});
                                     startTimeController.clear();
                                     endTimeController.clear();
                                     roomLabelController.clear();
@@ -334,6 +337,12 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                                                     onPressed: () {
                                                       lecturesList
                                                           .removeAt(index);
+                                                      Navigator.pop(context);
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(SnackBar(
+                                                              content: Text(
+                                                                  'Lecture Removed')));
                                                       setState(() {});
                                                     },
                                                   ),
@@ -391,6 +400,8 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                             MaterialPageRoute(
                                 builder: (context) => StudentsList(
                                       studentsData: studentsData,
+                                      course: CourseModel(),
+                                      isViewing: false,
                                     )));
                         // showDialog(
                         //     context: context,

@@ -19,8 +19,7 @@ class _LocationAttendanceScreenState extends State<LocationAttendanceScreen> {
 
   static const CameraPosition initialCameraPosition = CameraPosition(
       bearing: 192.8334901395799,
-      target: LatLng(32.6411185, 74.1647116),
-      tilt: 59.440717697143555,
+      target: LatLng(32.6415732, 74.1669387),
       zoom: 19.151926040649414);
   @override
   Widget build(BuildContext context) {
